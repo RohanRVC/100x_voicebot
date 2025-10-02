@@ -92,8 +92,8 @@ The bot uses a detailed system prompt to ensure responses match Rohan’s person
 **Rohan Vinay Chaudhary**  
 AI & Software Engineer
 
-**GitHub:** https://github.com/<your-username>  
-**LinkedIn:** https://www.linkedin.com/in/rohan-vinay-chaudhary/
+**GitHub:** https://github.com/rohanrvc  
+**LinkedIn:** [https://www.linkedin.com/in/rohan-vinay-chaudhary/](https://www.linkedin.com/in/rohan-chaudhary-51b260209/)
 
 ## License 📜
 
