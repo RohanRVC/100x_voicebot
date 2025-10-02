@@ -5,6 +5,8 @@ This is a **voice-enabled chatbot** designed for the Stage-1 assessment of the *
 The web app allows users to **ask questions by voice or text** and receive spoken and written responses that reflect Rohan’s persona. 💬
 
 ---
+Live link-: https://one00x-voicebot.onrender.com/
+
 
 ## Features ✨
 
