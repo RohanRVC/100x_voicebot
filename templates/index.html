@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100x Interview Voice Bot</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
+        }
+        .container {
+            background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px; width: 100%; padding: 40px; position: relative; overflow: hidden;
+        }
+        .container::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #333; font-size: 2em; margin-bottom: 10px; }
+        .header p { color: #666; font-size: 1.1em; }
+        .status-indicator { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #4caf50; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.5;} }
+        .chat-container {
+            background: #f8f9fa; border-radius: 15px; padding: 20px;
+            height: 400px; overflow-y: auto; margin-bottom: 20px; scroll-behavior: smooth;
+        }
+        .message { margin-bottom: 15px; display: flex; align-items: flex-start; gap: 10px; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message.user { flex-direction: row-reverse; }
+        .message-content { max-width: 70%; padding: 12px 16px; border-radius: 15px; position: relative; }
+        .message.user .message-content { background: linear-gradient(135deg,#667eea,#764ba2); color: white; }
+        .message.bot .message-content { background: white; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .message-icon { width: 35px; height: 35px; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-weight:bold; color:white; }
+        .message.user .message-icon { background: #667eea; }
+        .message.bot .message-icon { background: #764ba2; }
+        .input-container { display: flex; gap: 10px; margin-bottom: 20px; }
+        .input-field { flex:1; padding:15px; border:2px solid #e0e0e0; border-radius:10px; font-size:16px; transition: all 0.3s ease; }
+        .input-field:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,0.1); }
+        .button { padding:15px 25px; border:none; border-radius:10px; font-size:16px; font-weight:600; cursor:pointer; transition: all 0.3s ease; display:flex; align-items:center; gap:8px; }
+        .send-button { background: linear-gradient(135deg,#667eea,#764ba2); color:white; }
+        .send-button:hover { transform: translateY(-2px); box-shadow:0 5px 15px rgba(102,126,234,0.4); }
+        .voice-controls { display:flex; gap:10px; justify-content:center; }
+        .voice-button { width:60px; height:60px; border-radius:50%; border:none; background:white; box-shadow:0 4px 15px rgba(0,0,0,0.1); cursor:pointer; display:flex; align-items:center; justify-content:center; position:relative; transition: all 0.3s ease; }
+        .voice-button:hover { transform: scale(1.1); }
+        .voice-button.recording { background:#f44336; animation:recordPulse 1.5s infinite; }
+        @keyframes recordPulse { 0%,100%{box-shadow:0 0 0 0 rgba(244,67,54,0.7);}50%{box-shadow:0 0 0 20px rgba(244,67,54,0);} }
+        .voice-button svg { width:24px;height:24px; }
+        .suggested-questions { margin-top:20px; }
+        .suggested-questions h3 { color:#666;font-size:14px;margin-bottom:10px;text-align:center; }
+        .question-chips { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+        .question-chip { padding:8px 16px; background:#f0f2f5; border:1px solid #e0e0e0; border-radius:20px; cursor:pointer; transition:all 0.3s ease; font-size:14px; color:#666; }
+        .question-chip:hover { background: linear-gradient(135deg,#667eea,#764ba2); color:white; border-color:transparent; transform:translateY(-2px); }
+        .loading-indicator { display:none; text-align:center; padding:10px; }
+        .loading-indicator.active { display:block; }
+        .typing-dots { display:inline-flex; gap:4px; }
+        .typing-dots span { width:8px; height:8px; border-radius:50%; background:#667eea; animation:typing 1.4s infinite; }
+        .typing-dots span:nth-child(2){animation-delay:0.2s;}
+        .typing-dots span:nth-child(3){animation-delay:0.4s;}
+        @keyframes typing { 0%,60%,100%{transform:translateY(0);opacity:1;}30%{transform:translateY(-10px);opacity:0.5;} }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 100x Interview Bot</h1>
+            <p>created by Rohan with 💖</p>
+        </div>
+
+        <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span>Ready to chat</span>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message bot">
+                <div class="message-icon">🤖</div>
+                <div class="message-content">
+                    Hi! I'm excited to interview for the AI Agent Team position at 100x. Feel free to ask me any questions about my background, skills, and experience!
+                </div>
+            </div>
+        </div>
+
+        <div class="loading-indicator" id="loadingIndicator">
+            <div class="typing-dots"><span></span><span></span><span></span></div>
+        </div>
+
+        <div class="input-container">
+            <input type="text" id="messageInput" class="input-field" placeholder="Type your question or click the mic to speak..." onkeypress="handleKeyPress(event)">
+            <button class="button send-button" onclick="sendMessage()">
+                <span>Send</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="voice-controls">
+            <button class="voice-button" id="recordButton" onclick="toggleRecording()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="suggested-questions">
+            <h3>Suggested Questions</h3>
+            <div class="question-chips">
+                <div class="question-chip" onclick="askQuestion('What should we know about your life story?')">Life Story</div>
+                <div class="question-chip" onclick="askQuestion('What\'s your #1 superpower?')">Superpower</div>
+                <div class="question-chip" onclick="askQuestion('What are the top 3 areas you\'d like to grow in?')">Growth Areas</div>
+                <div class="question-chip" onclick="askQuestion('What misconception do your coworkers have about you?')">Misconceptions</div>
+                <div class="question-chip" onclick="askQuestion('How do you push your boundaries and limits?')">Pushing Boundaries</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        let isRecording = false;
+        let recognition = null;
+
+        // Initialize speech recognition if available
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('messageInput').value = transcript;
+                sendMessage();
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                alert('Speech recognition error: ' + event.error);
+                isRecording = false;
+                document.getElementById('recordButton').classList.remove('recording');
+            };
+
+            recognition.onend = function() {
+                isRecording = false;
+                document.getElementById('recordButton').classList.remove('recording');
+            };
+        }
+
+        function handleKeyPress(event) { if (event.key === 'Enter') sendMessage(); }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessageToChat(message, 'user');
+            input.value = '';
+            document.getElementById('loadingIndicator').classList.add('active');
+
+            try {
+                const response = await fetch(`${API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    addMessageToChat(data.response, 'bot');
+                    // Play AI audio if returned
+                    speakText(data.response, data.audio_base64);
+                } else {
+                    addMessageToChat('Sorry, I encountered an error. Please try again.', 'bot');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessageToChat('Sorry, could not connect to the server.', 'bot');
+            } finally {
+                document.getElementById('loadingIndicator').classList.remove('active');
+            }
+        }
+
+        function addMessageToChat(message, sender) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            const icon = sender === 'user' ? 'U' : '🤖';
+            messageDiv.innerHTML = `<div class="message-icon">${icon}</div><div class="message-content">${message}</div>`;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function speakText(text, audio_base64 = null) {
+            if (audio_base64) {
+                const audio = new Audio("data:audio/mp3;base64," + audio_base64);
+                audio.play().catch(err => { console.error("Error playing audio:", err); speakTextFallback(text); });
+            } else {
+                speakTextFallback(text);
+            }
+        }
+
+        function speakTextFallback(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function toggleRecording() {
+            const recordButton = document.getElementById('recordButton');
+            if (!recognition) return alert('Speech recognition not supported.');
+            if (!isRecording) { recognition.start(); isRecording = true; recordButton.classList.add('recording'); }
+            else { recognition.stop(); isRecording = false; recordButton.classList.remove('recording'); }
+        }
+
+        function askQuestion(question) { document.getElementById('messageInput').value = question; sendMessage(); }
+
+        window.onload = async () => {
+            try { await fetch(`${API_URL}/`); } 
+            catch (error) { console.warn('Could not connect to backend:', error); }
+        };
+    </script>
+</body>
+</html>
