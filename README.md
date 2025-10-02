@@ -101,6 +101,4 @@ This project is for assessment purposes only and is not licensed for commercial 
 
 ---
 
-If you’d like, I can **create a shorter, visually polished version with badges and a live demo link** specifically for recruiters—it will look more professional on GitHub. 🌟
 
-Would you like me to do that next?
